@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { acceptFriendRequest, getFriendRequests } from "../lib/api";
+import { acceptFriendRequest, getFriendRequests ,rejectFriendRequest} from "../lib/api";
 import { BellIcon, ClockIcon, MessageSquareIcon, UserCheckIcon } from "lucide-react";
 import NoNotificationsFound from "../components/NoNotificationsFound";
 
@@ -11,8 +11,22 @@ const NotificationsPage = () => {
     queryFn: getFriendRequests,
   });
 
-  const { mutate: acceptRequestMutation, isPending } = useMutation({
+  const {
+  mutate: acceptRequestMutation,
+  isPending: isAccepting,
+}  = useMutation({
     mutationFn: acceptFriendRequest,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["friendRequests"] });
+      queryClient.invalidateQueries({ queryKey: ["friends"] });
+    },
+  });
+
+   const {
+  mutate: rejectRequestMutation,
+  isPending: isRejecting,
+  } = useMutation({
+    mutationFn: rejectFriendRequest,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["friendRequests"] });
       queryClient.invalidateQueries({ queryKey: ["friends"] });
@@ -57,22 +71,31 @@ const NotificationsPage = () => {
                               <h3 className="font-semibold">{request.sender?.fullName}</h3>
                               <div className="flex flex-wrap gap-1.5 mt-1">
                                 <span className="badge badge-secondary badge-sm">
-                                  Native: {request.sender.nativeLanguage}
+                                  Native: {request.sender?.nativeLanguage}
                                 </span>
-                                <span className="badge badge-outline badge-sm">
-                                  Learning: {request.sender.learningLanguage}
-                                </span>
+
+                              <span className="badge badge-outline badge-sm">
+                                  Learning: {request.sender?.learningLanguage}
+                              </span>
                               </div>
                             </div>
                           </div>
-
+                        <div className="flex gap-2">
                           <button
                             className="btn btn-primary btn-sm"
                             onClick={() => acceptRequestMutation(request._id)}
-                            disabled={isPending}
+                            disabled={isAccepting || isRejecting}
                           >
                             Accept
                           </button>
+                          <button
+                            className="btn btn-primary btn-sm"
+                            onClick={() => rejectRequestMutation(request._id)}
+                            disabled={isAccepting || isRejecting}
+                          >
+                            Reject
+                          </button>
+                          </div>
                         </div>
                       </div>
                     </div>

@@ -33,20 +33,43 @@ const HomePage = () => {
     queryFn: getOutgoingFriendReqs,
   });
 
-  const { mutate: sendRequestMutation, isPending } = useMutation({
+  const { mutate: sendRequestMutation } = useMutation({
     mutationFn: sendFriendRequest,
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["outgoingFriendReqs"] }),
+
+    onMutate: async (userId) => {
+      // Optimistically add the ID immediately on click
+      setOutgoingRequestsIds((prev) => new Set([...prev, userId]));
+    },
+
+    onError: (_, userId) => {
+      // Roll back only the failed request
+      setOutgoingRequestsIds((prev) => {
+        const updated = new Set(prev);
+        updated.delete(userId);
+        return updated;
+      });
+    },
+
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["outgoingFriendReqs"] });
+    },
   });
 
   useEffect(() => {
-    const outgoingIds = new Set();
     if (outgoingFriendReqs && outgoingFriendReqs.length > 0) {
-      outgoingFriendReqs.forEach((req) => {
-        outgoingIds.add(req.recipient._id);
+      // FIXED: Merge into existing set instead of replacing it.
+      // Replacing caused the set to briefly clear during refetch → buttons blinked.
+      setOutgoingRequestsIds((prev) => {
+        const updated = new Set(prev);
+        outgoingFriendReqs.forEach((req) => {
+  if (req.recipient?._id) {
+    updated.add(req.recipient._id);
+  }
+});
+        return updated;
       });
-      setOutgoingRequestsIds(outgoingIds);
     }
-  }, [outgoingFriendReqs,setOutgoingRequestsIds]);
+  }, [outgoingFriendReqs]);
 
   return (
     <div className="min-h-screen bg-base-100 p-4 sm:p-6 lg:p-8">
@@ -100,7 +123,6 @@ const HomePage = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {recommendedUsers.map((user) => {
                 const hasRequestBeenSent = outgoingRequestsIds.has(user._id);
-
                 return (
                   <div
                     key={user._id}
@@ -141,9 +163,9 @@ const HomePage = () => {
                       <button
                         className={`btn w-full mt-2 ${
                           hasRequestBeenSent ? "btn-disabled" : "btn-primary"
-                        } `}
-                        onClick={() => sendRequestMutation(user._id)}
-                        disabled={hasRequestBeenSent || isPending}
+                        }`}
+                        onClick={() => !hasRequestBeenSent && sendRequestMutation(user._id)}
+                        disabled={hasRequestBeenSent}
                       >
                         {hasRequestBeenSent ? (
                           <>

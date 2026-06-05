@@ -163,4 +163,41 @@ export async function getOutgoingFriendReqs(req,res){
 //////////////////////////////////////////////////////////////////////////////////////
 
 
-export async function rejectFriendRequest(req,res){}
+export async function rejectFriendRequest(req,res){
+  try {
+    const { id: requestId } = req.params; // Yeh FriendRequest document ka ID hai, jo database mein store hai.
+
+    const friendRequest = await FriendRequest.findById(requestId);
+
+    if (!friendRequest) {
+      return res.status(404).json({ message: "Friend request not found" });
+    }
+
+     //Verify that the current req is thre recipient
+//      Jiske paas friend request aayi hai (recipient)
+// aur jo user abhi login hai (req.user.id)
+// Agar dono same nahi hai —
+// toh usko request accept karne ki permission nahi milegi.
+    if (friendRequest.recipient.toString() !== req.user.id) {
+      return res.status(403).json({ message: "You are not authorized to reject this request" });
+    }
+
+
+    friendRequest.status = "rejected";
+    await friendRequest.save(); // ✅ await lagao
+   
+    //Sender ke friends array me recipient ko add kiya.
+    // await User.findByIdAndUpdate(friendRequest.sender, {
+    //   $addToSet: { friends: friendRequest.recipient },
+    // });
+
+    // await User.findByIdAndUpdate(friendRequest.recipient, {
+    //   $addToSet: { friends: friendRequest.sender },
+    // });
+
+    res.status(200).json({ message: "Friend request rejected" });
+  } catch (error) {
+    console.log("Error in acceptFriendRequest controller", error.message);
+    res.status(500).json({ message: "Internal Server Error" });
+  }
+}
