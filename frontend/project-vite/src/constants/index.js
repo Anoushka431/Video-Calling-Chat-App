@@ -195,3 +195,26 @@ export const LANGUAGE_TO_FLAG = {
   turkish: "tr",
   dutch: "nl",
 };
+
+export const LOCATIONS = [
+  "Kolkata, India",
+  "Mumbai, India",
+  "Delhi, India",
+  "Bangalore, India",
+  "Chennai, India",
+  "Hyderabad, India",
+  "Pune, India",
+  "Ahmedabad, India",
+  "Jaipur, India",
+  "Lucknow, India",
+  "London, UK",
+  "Paris, France",
+  "Berlin, Germany",
+  "Tokyo, Japan",
+  "Seoul, South Korea",
+  "Moscow, Russia",
+  "New York, USA",
+  "Los Angeles, USA",
+  "Toronto, Canada",
+  "Sydney, Australia",
+];

@@ -4,7 +4,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import toast from "react-hot-toast";
 import { completeOnboarding } from "../lib/api";
 import { LoaderIcon, MapPinIcon, ShipWheelIcon, ShuffleIcon ,CameraIcon} from "lucide-react";
-import { LANGUAGES } from "../constants";
+import { LANGUAGES,LOCATIONS } from "../constants";
 
 const OnboardingPage = () => {
   const { authUser } = useAuthUser();
@@ -155,17 +155,24 @@ const OnboardingPage = () => {
               <label className="label">
                 <span className="label-text">Location</span>
               </label>
-              <div className="relative">
-                <MapPinIcon className="absolute top-1/2 transform -translate-y-1/2 left-3 size-5 text-base-content opacity-70" />
-                <input
-                  type="text"
-                  name="location"
-                  value={formState.location}
-                  onChange={(e) => setFormState({ ...formState, location: e.target.value })}
-                  className="input input-bordered w-full pl-10"
-                  placeholder="City, Country"
-                />
-              </div>
+              <select
+  value={formState.location}
+  onChange={(e) =>
+    setFormState({
+      ...formState,
+      location: e.target.value,
+    })
+  }
+  className="select select-bordered w-full"
+>
+  <option value="">Select Location</option>
+
+  {LOCATIONS.map((location) => (
+    <option key={location} value={location}>
+      {location}
+    </option>
+  ))}
+</select>
             </div>
 
             {/* SUBMIT BUTTON */}
